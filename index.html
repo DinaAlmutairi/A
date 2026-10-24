@@ -187,7 +187,7 @@
           <span>＋ إضافة صورة التبرع</span>
           <input id="imageUpload" type="file" accept="image/*">
         </label>
-        <p class="small-note">اختيار الصورة هنا للمعاينة فقط. لإظهارها على GitHub للجميع، ضعي الصورة داخل ملفات الموقع واتبعي التعليمات في README.</p>
+        <p class="small-note">لإظهار صورة مختلفة لكل عضو: ارفعي صور التبرع إلى ملفات الموقع، ثم أضيفي اسم الصورة إلى رابط الإهداء. التفاصيل في ملف README.</p>
         <p class="signature">تقبّل الله منّا ومنكم، وكتب لنا ولكم الأجر. 🩵</p>
       </div>
     </section>
@@ -213,21 +213,43 @@
       gift.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
-    document.getElementById('imageUpload').addEventListener('change', (event) => {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-      const image = document.getElementById('donationImage');
-      image.src = URL.createObjectURL(file);
-      image.classList.remove('hidden');
-      document.getElementById('placeholder').classList.add('hidden');
-    });
-
-    // لتخصيص الإهداء باسم عضو، أضيفي ?name=اسم-العضو إلى نهاية رابط الموقع.
     const params = new URLSearchParams(window.location.search);
     const memberName = params.get('name');
+    const imageFile = params.get('image');
+    const donationImage = document.getElementById('donationImage');
+    const placeholder = document.getElementById('placeholder');
+
+    // تغيير الاسم من الرابط: ?name=اسم-العضو
     if (memberName) {
       document.querySelector('.letter-card h2').textContent = `إلى ${memberName}،`;
     }
+
+    // تغيير صورة إحسان من الرابط: &image=اسم-الصورة.jpg
+    // ارفعي الصورة إلى نفس مجلد index.html في GitHub أولًا.
+    if (imageFile) {
+      donationImage.onload = () => {
+        donationImage.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      };
+      donationImage.onerror = () => {
+        donationImage.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        placeholder.querySelector('strong').textContent = 'ما قدرنا نعرض الصورة';
+        placeholder.querySelector('p').textContent = `تأكدي أن الملف ${imageFile} مرفوع بجانب index.html وأن اسمه مطابق تمامًا.`;
+      };
+      donationImage.src = imageFile;
+    }
+
+    // زر اختيار الصورة للمعاينة على جهازك فقط، ولا يغيّر الصورة المنشورة للزوار.
+    document.getElementById('imageUpload').addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      donationImage.onload = null;
+      donationImage.onerror = null;
+      donationImage.src = URL.createObjectURL(file);
+      donationImage.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+    });
   </script>
 </body>
 </html>
